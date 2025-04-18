@@ -106,6 +106,11 @@ router.get("/:id", (req, res) => {
   });
 });
 
+router.get("/", (req, res) => {
+  const gameFiles = fs.readdirSync(GAMES_DIR);
+  res.json(gameFiles);
+});
+
 router.post("/guess/:id", (req, res) => {
   const { id } = req.params;
   const { word } = req.body;
@@ -181,10 +186,6 @@ cron.schedule("0 0 * * *", () => {
   console.log("Old games cleared at midnight.");
 });
 clearOldGames();
-
-cron.schedule("*/10 * * * *", () => {
-  console.log("ping");
-});
 
 export const getAllLeaguePedantix = async (): Promise<void> => {
   for (let i = 0; i < champions.length; i++) {

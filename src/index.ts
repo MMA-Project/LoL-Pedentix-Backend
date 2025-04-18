@@ -19,6 +19,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get("/", (req, res) => {
+  res.send("Welcome to the Word Guessing Game API!");
+});
+
 // Game routes
 app.use("/api/game", gameRouter);
 
