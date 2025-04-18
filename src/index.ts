@@ -4,7 +4,14 @@ import cors from "cors";
 import gameRouter from "./routes/game";
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://mma-project.github.io/LoL-Pedentix/",
+      "http://localhost:5173/LoL-Pedentix/",
+    ],
+  })
+);
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
