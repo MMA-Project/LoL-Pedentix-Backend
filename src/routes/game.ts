@@ -182,6 +182,10 @@ cron.schedule("0 0 * * *", () => {
 });
 clearOldGames();
 
+cron.schedule("*/10 * * * *", () => {
+  console.log("ping");
+});
+
 export const getAllLeaguePedantix = async (): Promise<void> => {
   for (let i = 0; i < champions.length; i++) {
     const champion = champions[i];
