@@ -75,7 +75,7 @@ router.get("/start", async (req, res) => {
     image: chosen.image,
     mode: "daily",
     rawText: chosen.text,
-    foundWords: [],
+    triedWords: [],
   };
 
   saveGameToFile(game);
@@ -84,7 +84,7 @@ router.get("/start", async (req, res) => {
     gameId,
     seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.foundWords),
+    text: getMaskedText(game.rawText, game.triedWords),
   });
 });
 
@@ -101,8 +101,8 @@ router.get("/:id", (req, res) => {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.foundWords),
-    foundWords: game.foundWords,
+    text: getMaskedText(game.rawText, game.triedWords),
+    triedWords: game.triedWords,
   });
 });
 
@@ -127,8 +127,8 @@ router.post("/guess/:id", (req, res) => {
 
   const wordLower = word.toLowerCase();
 
-  if (game.foundWords.includes(wordLower)) {
-    res.status(400).send("Word already found.");
+  if (game.triedWords.includes(wordLower)) {
+    res.status(304).send("Word already found.");
     return;
   }
 
@@ -142,15 +142,15 @@ router.post("/guess/:id", (req, res) => {
       text: game.rawText,
       title: game.name,
       image: game.image,
-      foundWords: game.foundWords,
+      triedWords: game.triedWords,
     });
     return;
   }
 
   let correct = false;
+  game.triedWords.push(wordLower);
+  saveGameToFile(game);
   if (game.rawText.toLowerCase().includes(wordLower)) {
-    game.foundWords.push(wordLower);
-    saveGameToFile(game);
     correct = true;
   }
 
@@ -159,8 +159,8 @@ router.post("/guess/:id", (req, res) => {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.foundWords),
-    foundWords: game.foundWords,
+    text: getMaskedText(game.rawText, game.triedWords),
+    triedWords: game.triedWords,
   });
 });
 

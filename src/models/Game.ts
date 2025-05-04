@@ -6,5 +6,5 @@ export default interface Game {
   image: string;
   name: string;
   rawText: string;
-  foundWords: string[];
+  triedWords: string[];
 }

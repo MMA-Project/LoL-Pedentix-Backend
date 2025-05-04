@@ -1,5 +1,5 @@
-export function getMaskedText(text: string, foundWords: string[]): string {
-  const foundSet = new Set(foundWords.map((w) => w.toLowerCase()));
+export function getMaskedText(text: string, triedWords: string[]): string {
+  const foundSet = new Set(triedWords.map((w) => w.toLowerCase()));
 
   return text.replace(/\b[\p{L}]+(?:'[\p{L}]+)*\b/gu, (word) => {
     const cleanedWord = word.toLowerCase();
