@@ -127,11 +127,6 @@ router.post("/guess/:id", (req, res) => {
 
   const wordLower = word.toLowerCase();
 
-  if (game.triedWords.includes(wordLower)) {
-    res.status(304).send("Word already found.");
-    return;
-  }
-
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
     saveGameToFile(game);
@@ -148,8 +143,14 @@ router.post("/guess/:id", (req, res) => {
   }
 
   let correct = false;
-  game.triedWords.push(wordLower);
-  saveGameToFile(game);
+
+  if (game.triedWords.includes(wordLower)) {
+    res.status(304).send("Word already found.");
+  } else {
+    game.triedWords.push(wordLower);
+    saveGameToFile(game);
+  }
+
   if (game.rawText.toLowerCase().includes(wordLower)) {
     correct = true;
   }
