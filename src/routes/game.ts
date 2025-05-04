@@ -144,9 +144,7 @@ router.post("/guess/:id", (req, res) => {
 
   let correct = false;
 
-  if (game.triedWords.includes(wordLower)) {
-    res.status(304).send("Word already found.");
-  } else {
+  if (!game.triedWords.includes(wordLower)) {
     game.triedWords.push(wordLower);
     saveGameToFile(game);
   }
