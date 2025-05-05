@@ -1,11 +1,12 @@
 import { LevenshteinDistance, PorterStemmerFr } from "natural";
+import { Synonyms } from "../models/Game";
 const Reverso = require("reverso-api");
 const reverso = new Reverso();
 
 export function getMaskedText(
   text: string,
   triedWords: string[],
-  synonyms?: Map<string, string>
+  synonymsOfTriedWord?: Synonyms[]
 ): string {
   const lowerTried = triedWords.map((w) => w.toLowerCase());
   const foundSet = new Set(lowerTried);
@@ -16,13 +17,12 @@ export function getMaskedText(
     const stem = PorterStemmerFr.stem(tried);
     stemsToTried.set(stem, tried);
   }
-
-  console.log(
-    "stemsToTried",
-    stemsToTried
-    // "stemsSynonymToTried",
-    // stemsSynonymToTried
-  );
+  synonymsOfTriedWord?.forEach(({ triedWord, synonyms }) => {
+    synonyms.forEach((synonym) => {
+      const stem = PorterStemmerFr.stem(synonym);
+      stemsSynonymToTried.set(stem, triedWord);
+    });
+  });
 
   return text.replace(/[\p{L}]+(?:'[\p{L}]+)*/gu, (word) => {
     const lower = word.toLowerCase();
@@ -34,8 +34,7 @@ export function getMaskedText(
     const wordStem = PorterStemmerFr.stem(lower);
 
     if (stemsToTried.has(wordStem)) {
-      const guessedWord = stemsToTried.get(wordStem)!;
-      return word; // `[${guessedWord}]`;
+      return word;
     }
 
     if (stemsSynonymToTried.has(wordStem)) {
@@ -55,8 +54,8 @@ export function getMaskedText(
   });
 }
 
-async function getSynonyms(word: string) {
-  await new Promise((resolve, reject) => {
+export async function getSynonyms(word: string) {
+  return await new Promise<string[]>((resolve, reject) => {
     reverso.getSynonyms(word, "french", (err: any, response: any) => {
       if (!err && response.synonyms) {
         resolve(response.synonyms.map((syn: any) => syn.synonym));
