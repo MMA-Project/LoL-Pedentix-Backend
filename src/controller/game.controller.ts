@@ -6,7 +6,6 @@ import express from "express";
 export const gameRouter = express.Router();
 
 gameRouter.get("/start", async (req: any, res: any) => {
-  console.log("Starting a new daily game...");
   const gameData = await gameService.startDailyGame();
   res.json(gameData);
 });
@@ -22,8 +21,8 @@ gameRouter.get("/", (req: any, res: any) => {
   res.json(files);
 });
 
-gameRouter.post("/guess/:id", (req: any, res: any) => {
-  const result = gameService.makeGuess(req.params.id, req.body.word);
+gameRouter.post("/guess/:id", async (req: any, res: any) => {
+  const result = await gameService.makeGuess(req.params.id, req.body.word);
   if (!result) return res.status(404).send("Game not found");
   if (result.alreadyGuessed)
     return res.status(400).send("Game already finished.");

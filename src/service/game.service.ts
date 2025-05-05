@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDailySeed } from "../utils/seed";
 import { getLeaguePedantixfromSeed } from "../routes/router";
-import { getMaskedText } from "../utils/words";
+import { getMaskedText, getSynonyms } from "../utils/words";
 import Game from "../models/Game";
 import {
   saveGameToFile,
@@ -22,6 +22,7 @@ export const startDailyGame = async (): Promise<any> => {
     mode: "daily",
     rawText: chosen.text,
     triedWords: [],
+    synonymsOfTriedWord: [],
   };
 
   saveGameToFile(game);
@@ -47,7 +48,7 @@ export const getGame = (id: string): any => {
   };
 };
 
-export const makeGuess = (id: string, word: string): any => {
+export const makeGuess = async (id: string, word: string): Promise<any> => {
   const game = loadGameFromFile(id);
   if (!game) return null;
 
@@ -74,15 +75,24 @@ export const makeGuess = (id: string, word: string): any => {
 
   if (!game.triedWords.includes(wordLower)) {
     game.triedWords.push(wordLower);
-    saveGameToFile(game);
+    const synonyms = await getSynonyms(wordLower);
+    game.synonymsOfTriedWord.push({
+      triedWord: wordLower,
+      synonyms: synonyms,
+    });
   }
 
+  saveGameToFile(game);
+
   return {
-    correct: game.rawText.toLowerCase().includes(wordLower),
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.triedWords),
+    text: getMaskedText(
+      game.rawText,
+      game.triedWords,
+      game.synonymsOfTriedWord
+    ),
     triedWords: game.triedWords,
   };
 };

@@ -7,4 +7,10 @@ export default interface Game {
   name: string;
   rawText: string;
   triedWords: string[];
+  synonymsOfTriedWord: Synonyms[];
+}
+
+export interface Synonyms {
+  triedWord: string;
+  synonyms: string[];
 }
