@@ -24,13 +24,6 @@ export function getMaskedText(
     });
   });
 
-  console.log(
-    "stemsToTried",
-    stemsToTried
-    // "stemsSynonymToTried",
-    // stemsSynonymToTried
-  );
-
   return text.replace(/[\p{L}]+(?:'[\p{L}]+)*/gu, (word) => {
     const lower = word.toLowerCase();
 
