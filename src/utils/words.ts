@@ -1,26 +1,37 @@
+import { PorterStemmerFr } from "natural";
+
 export function getMaskedText(text: string, triedWords: string[]): string {
-  const foundSet = new Set(triedWords.map((w) => w.toLowerCase()));
+  const lowerTried = triedWords.map((w) => w.toLowerCase());
+  const foundSet = new Set(lowerTried);
+
+  const stemsToTried = new Map<string, string>();
+  for (const tried of lowerTried) {
+    const stem = PorterStemmerFr.stem(tried);
+    stemsToTried.set(stem, tried);
+  }
 
   return text.replace(/\b[\p{L}]+(?:'[\p{L}]+)*\b/gu, (word) => {
-    const cleanedWord = word.toLowerCase();
+    const lower = word.toLowerCase();
 
-    // Vérifie si le mot est trouvé dans la liste des mots
-    if (foundSet.has(cleanedWord)) {
+    if (foundSet.has(lower)) {
       return word;
     }
 
-    // Si le mot contient une apostrophe, on gère l'apostrophe séparément
+    const wordStem = PorterStemmerFr.stem(lower);
+
+    if (stemsToTried.has(wordStem)) {
+      const guessedWord = stemsToTried.get(wordStem)!;
+      return `[${guessedWord}]`;
+    }
+
     if (word.includes("'")) {
       const parts = word.split("'");
-      // Masque les lettres des deux parties du mot séparées par l'apostrophe
       const maskedParts = parts.map((part) =>
         foundSet.has(part.toLowerCase()) ? part : part.replace(/[\p{L}]/gu, "●")
       );
-      // Réassemble avec l'apostrophe
       return maskedParts.join("'");
-    } else {
-      // Sinon, masque tout le mot
-      return word.replace(/[\p{L}]/gu, "●");
     }
+
+    return word.replace(/[\p{L}]/gu, "●");
   });
 }
