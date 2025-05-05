@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
-
-import gameRouter from "./routes/game";
+import { gameRouter } from "./controller/game.controller";
 
 const app = express();
 app.use(
