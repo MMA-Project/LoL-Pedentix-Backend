@@ -1,15 +1,19 @@
 import { LevenshteinDistance, PorterStemmerFr } from "natural";
-import { Synonyms } from "../models/Game";
+import { Synonyms, Verbs } from "../models/Game";
 const Reverso = require("reverso-api");
 const reverso = new Reverso();
 
 export function getMaskedText(
   text: string,
   triedWords: string[],
-  synonymsOfTriedWord?: Synonyms[]
+  synonymsOfTriedWord?: Synonyms[],
+  verbsOfTriedWord?: Verbs[]
 ): string {
   const lowerTried = triedWords.map((w) => w.toLowerCase());
   const foundSet = new Set(lowerTried);
+  const allFormOfVerbs = new Set<string>(
+    verbsOfTriedWord?.flatMap((v) => v.allFormOfVerb) ?? []
+  );
 
   const stemsToTried = new Map<string, string>();
   const stemsSynonymToTried = new Map<string, string>();
@@ -27,14 +31,19 @@ export function getMaskedText(
   return text.replace(/[\p{L}]+(?:'[\p{L}]+)*/gu, (word) => {
     const lower = word.toLowerCase();
 
-    if (lowerTried.some((tried) => areCloseWords(lower, tried))) {
+    const wordStem = PorterStemmerFr.stem(lower);
+
+    if (
+      foundSet.has(lower) ||
+      stemsToTried.has(wordStem) ||
+      allFormOfVerbs.has(lower)
+    ) {
       return word;
     }
 
-    const wordStem = PorterStemmerFr.stem(lower);
-
-    if (stemsToTried.has(wordStem)) {
-      return word;
+    const closeWord = lowerTried.find((tried) => areCloseWords(lower, tried));
+    if (closeWord) {
+      return `{${closeWord}}`;
     }
 
     if (stemsSynonymToTried.has(wordStem)) {
@@ -59,6 +68,18 @@ export async function getSynonyms(word: string) {
     reverso.getSynonyms(word, "french", (err: any, response: any) => {
       if (!err && response.synonyms) {
         resolve(response.synonyms.map((syn: any) => syn.synonym));
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
+
+export async function getConjugation(word: string) {
+  return await new Promise<string[]>((resolve, reject) => {
+    reverso.getConjugation(word, "french", (err: any, response: any) => {
+      if (!err && response) {
+        resolve(response.verbForms.flatMap((form: any) => form.verbs));
       } else {
         reject(err);
       }

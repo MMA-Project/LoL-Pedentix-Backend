@@ -8,9 +8,15 @@ export default interface Game {
   rawText: string;
   triedWords: string[];
   synonymsOfTriedWord: Synonyms[];
+  verbsOfTriedWord: Verbs[];
 }
 
 export interface Synonyms {
   triedWord: string;
   synonyms: string[];
+}
+
+export interface Verbs {
+  triedWord: string;
+  allFormOfVerb: string[];
 }
