@@ -6,6 +6,7 @@ const reverso = new Reverso();
 export function getMaskedText(
   text: string,
   triedWords: string[],
+  wordTriedWithGuessed?: { wordTried: string; wordsGuessed: string[] }[],
   synonymsOfTriedWord?: Synonyms[],
   verbsOfTriedWord?: Verbs[]
 ): string {
@@ -38,6 +39,24 @@ export function getMaskedText(
       stemsToTried.has(wordStem) ||
       allFormOfVerbs.has(lower)
     ) {
+      const triedWord =
+        stemsToTried.get(wordStem) ??
+        verbsOfTriedWord?.find((v) => v.allFormOfVerb.includes(lower))
+          ?.triedWord;
+      const existingEntry = wordTriedWithGuessed?.find(
+        (entry) => entry.wordTried === triedWord
+      );
+      if (existingEntry) {
+        if (!existingEntry.wordsGuessed.includes(lower)) {
+          existingEntry.wordsGuessed.push(lower);
+        }
+      } else {
+        wordTriedWithGuessed?.push({
+          wordTried: triedWord as string,
+          wordsGuessed: [lower],
+        });
+      }
+
       return word;
     }
 
@@ -54,7 +73,10 @@ export function getMaskedText(
     if (word.includes("'")) {
       const parts = word.split("'");
       const maskedParts = parts.map((part) =>
-        foundSet.has(part.toLowerCase()) ? part : part.replace(/[\p{L}]/gu, "●")
+        foundSet.has(part.toLowerCase()) ||
+        stemsToTried.has(PorterStemmerFr.stem(part.toLowerCase()))
+          ? part
+          : part.replace(/[\p{L}]/gu, "●")
       );
       return maskedParts.join("'");
     }

@@ -40,12 +40,23 @@ export const getGame = (id: string): any => {
   const game = loadGameFromFile(id);
   if (!game) return null;
 
+  const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
+    [];
+
+  const text = getMaskedText(
+    game.rawText,
+    game.triedWords,
+    wordTriedWithGuessed,
+    game.synonymsOfTriedWord,
+    game.verbsOfTriedWord
+  );
+
   return {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.triedWords),
-    triedWords: game.triedWords,
+    text,
+    wordTriedWithGuessed,
   };
 };
 
@@ -63,7 +74,6 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     game.guessed = true;
     saveGameToFile(game);
     return {
-      guessedCorrectly: true,
       gameId: game.id,
       seed: game.seed,
       guessed: game.guessed,
@@ -95,16 +105,22 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
 
   saveGameToFile(game);
 
+  const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
+    [];
+
+  const text = getMaskedText(
+    game.rawText,
+    game.triedWords,
+    wordTriedWithGuessed,
+    game.synonymsOfTriedWord,
+    game.verbsOfTriedWord
+  );
+
   return {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(
-      game.rawText,
-      game.triedWords,
-      game.synonymsOfTriedWord,
-      game.verbsOfTriedWord
-    ),
-    triedWords: game.triedWords,
+    text,
+    wordTriedWithGuessed,
   };
 };
