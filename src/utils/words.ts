@@ -34,6 +34,8 @@ export function getMaskedText(
 
     const wordStem = PorterStemmerFr.stem(lower);
 
+    if (lower === "dieux") console.log(lower, wordStem, stemsToTried);
+
     const updateWordGuessedList = (word: string) => {
       const triedWord =
         stemsToTried.get(PorterStemmerFr.stem(word)) ??
@@ -102,8 +104,6 @@ export async function getConjugation(word: string) {
 }
 
 function areCloseWords(word1: string, word2: string): boolean {
-  if (word1 === word2) return true;
-
   // Autoriser une petite distance de Levenshtein
   const distance = LevenshteinDistance(word1, word2);
   //console.log("Distance:", distance, word1, word2);
