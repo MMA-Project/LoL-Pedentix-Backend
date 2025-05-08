@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDailySeed } from "../utils/seed";
 import { getLeaguePedantixfromSeed } from "../routes/router";
-import { getMaskedText, getSynonyms } from "../utils/words";
+import { getConjugation, getMaskedText, getSynonyms } from "../utils/words";
 import Game from "../models/Game";
 import {
   saveGameToFile,
@@ -22,6 +22,7 @@ export const startDailyGame = async (): Promise<any> => {
     mode: "daily",
     rawText: chosen.text,
     triedWords: [],
+    verbsOfTriedWord: [],
     synonymsOfTriedWord: [],
   };
 
@@ -32,6 +33,8 @@ export const startDailyGame = async (): Promise<any> => {
     seed,
     guessed: game.guessed,
     text: getMaskedText(game.rawText, game.triedWords),
+    triedWords: [],
+    wordTriedWithGuessed: [],
   };
 };
 
@@ -39,12 +42,24 @@ export const getGame = (id: string): any => {
   const game = loadGameFromFile(id);
   if (!game) return null;
 
+  const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
+    [];
+
+  const text = getMaskedText(
+    game.rawText,
+    game.triedWords,
+    wordTriedWithGuessed,
+    game.synonymsOfTriedWord,
+    game.verbsOfTriedWord
+  );
+
   return {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(game.rawText, game.triedWords),
+    text,
     triedWords: game.triedWords,
+    wordTriedWithGuessed,
   };
 };
 
@@ -62,7 +77,6 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     game.guessed = true;
     saveGameToFile(game);
     return {
-      guessedCorrectly: true,
       gameId: game.id,
       seed: game.seed,
       guessed: game.guessed,
@@ -70,29 +84,48 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
       title: game.name,
       image: game.image,
       triedWords: game.triedWords,
+      wordTriedWithGuessed: [],
     };
   }
 
   if (!game.triedWords.includes(wordLower)) {
     game.triedWords.push(wordLower);
     const synonyms = await getSynonyms(wordLower);
-    game.synonymsOfTriedWord.push({
-      triedWord: wordLower,
-      synonyms: synonyms,
-    });
+    if (synonyms.length > 0) {
+      game.synonymsOfTriedWord.push({
+        triedWord: wordLower,
+        synonyms: synonyms,
+      });
+    }
+
+    const conjugaison = await getConjugation(wordLower);
+    if (conjugaison.length > 0) {
+      game.verbsOfTriedWord.push({
+        triedWord: wordLower,
+        allFormOfVerb: Array.from(new Set(conjugaison)),
+      });
+    }
   }
 
   saveGameToFile(game);
+
+  const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
+    [];
+
+  const text = getMaskedText(
+    game.rawText,
+    game.triedWords,
+    wordTriedWithGuessed,
+    game.synonymsOfTriedWord,
+    game.verbsOfTriedWord
+  );
 
   return {
     gameId: game.id,
     seed: game.seed,
     guessed: game.guessed,
-    text: getMaskedText(
-      game.rawText,
-      game.triedWords,
-      game.synonymsOfTriedWord
-    ),
+    text,
     triedWords: game.triedWords,
+    wordTriedWithGuessed,
   };
 };
