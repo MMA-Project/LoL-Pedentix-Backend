@@ -33,6 +33,8 @@ export const startDailyGame = async (): Promise<any> => {
     seed,
     guessed: game.guessed,
     text: getMaskedText(game.rawText, game.triedWords),
+    triedWords: [],
+    wordTriedWithGuessed: [],
   };
 };
 
@@ -56,6 +58,7 @@ export const getGame = (id: string): any => {
     seed: game.seed,
     guessed: game.guessed,
     text,
+    triedWords: game.triedWords,
     wordTriedWithGuessed,
   };
 };
@@ -81,6 +84,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
       title: game.name,
       image: game.image,
       triedWords: game.triedWords,
+      wordTriedWithGuessed: [],
     };
   }
 
@@ -98,7 +102,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     if (conjugaison.length > 0) {
       game.verbsOfTriedWord.push({
         triedWord: wordLower,
-        allFormOfVerb: conjugaison,
+        allFormOfVerb: Array.from(new Set(conjugaison)),
       });
     }
   }
@@ -121,6 +125,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     seed: game.seed,
     guessed: game.guessed,
     text,
+    triedWords: game.triedWords,
     wordTriedWithGuessed,
   };
 };

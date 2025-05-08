@@ -29,34 +29,37 @@ export function getMaskedText(
     });
   });
 
-  return text.replace(/[\p{L}]+(?:'[\p{L}]+)*/gu, (word) => {
+  return text.replace(/[\p{L}]+/gu, (word) => {
     const lower = word.toLowerCase();
 
     const wordStem = PorterStemmerFr.stem(lower);
+
+    const updateWordGuessedList = (word: string) => {
+      const triedWord =
+        stemsToTried.get(PorterStemmerFr.stem(word)) ??
+        verbsOfTriedWord?.find((v) => v.allFormOfVerb.includes(word))
+          ?.triedWord;
+      const existingEntry = wordTriedWithGuessed?.find(
+        (entry) => entry.wordTried === triedWord
+      );
+      if (existingEntry) {
+        if (!existingEntry.wordsGuessed.includes(word)) {
+          existingEntry.wordsGuessed.push(word);
+        }
+      } else {
+        wordTriedWithGuessed?.push({
+          wordTried: triedWord as string,
+          wordsGuessed: [word],
+        });
+      }
+    };
 
     if (
       foundSet.has(lower) ||
       stemsToTried.has(wordStem) ||
       allFormOfVerbs.has(lower)
     ) {
-      const triedWord =
-        stemsToTried.get(wordStem) ??
-        verbsOfTriedWord?.find((v) => v.allFormOfVerb.includes(lower))
-          ?.triedWord;
-      const existingEntry = wordTriedWithGuessed?.find(
-        (entry) => entry.wordTried === triedWord
-      );
-      if (existingEntry) {
-        if (!existingEntry.wordsGuessed.includes(lower)) {
-          existingEntry.wordsGuessed.push(lower);
-        }
-      } else {
-        wordTriedWithGuessed?.push({
-          wordTried: triedWord as string,
-          wordsGuessed: [lower],
-        });
-      }
-
+      updateWordGuessedList(lower);
       return word;
     }
 
@@ -68,17 +71,6 @@ export function getMaskedText(
     if (stemsSynonymToTried.has(wordStem)) {
       const guessedWord = stemsSynonymToTried.get(wordStem)!;
       return `[${guessedWord}]`;
-    }
-
-    if (word.includes("'")) {
-      const parts = word.split("'");
-      const maskedParts = parts.map((part) =>
-        foundSet.has(part.toLowerCase()) ||
-        stemsToTried.has(PorterStemmerFr.stem(part.toLowerCase()))
-          ? part
-          : part.replace(/[\p{L}]/gu, "●")
-      );
-      return maskedParts.join("'");
     }
 
     return word.replace(/[\p{L}]/gu, "●");
