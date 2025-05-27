@@ -34,7 +34,7 @@ export const getChampion = async (name: string): Promise<Champion | null> => {
 };
 
 export const clearOldDailyGames = async (): Promise<void> => {
-  const todaySeed = getDailySeed().toString();
+  const todaySeed = getDailySeed();
   await dailyGamesCollection.deleteMany({
     seed: { $ne: todaySeed },
   });

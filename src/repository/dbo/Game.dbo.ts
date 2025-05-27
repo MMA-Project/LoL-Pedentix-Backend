@@ -3,7 +3,7 @@ import { ObjectId, WithId } from "mongodb";
 
 export default interface GameDBO {
   _id: ObjectId;
-  seed: string;
+  seed: number;
   mode: string;
   guessed: boolean;
   image: string;
