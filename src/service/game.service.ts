@@ -2,19 +2,17 @@ import { v4 as uuidv4 } from "uuid";
 import { getDailySeed } from "../utils/seed";
 import { getLeaguePedantixfromSeed } from "../routes/router";
 import { getConjugation, getMaskedText, getSynonyms } from "../utils/words";
-import Game from "../models/Game";
-import {
-  saveGameToFile,
-  loadGameFromFile,
-} from "../repository/game.repository";
+import Game from "./models/Game";
+import { createGame, saveGame, getGame } from "../repository/game.repository";
+import { ObjectId } from "mongodb";
 
 export const startDailyGame = async (): Promise<any> => {
   const seed = getDailySeed();
   const chosen = await getLeaguePedantixfromSeed(seed);
-  const gameId = uuidv4();
+  const gameId = new ObjectId();
 
   const game: Game = {
-    id: gameId,
+    id: gameId.toString(),
     seed: seed.toString(),
     name: chosen.name,
     guessed: false,
@@ -26,7 +24,7 @@ export const startDailyGame = async (): Promise<any> => {
     synonymsOfTriedWord: [],
   };
 
-  saveGameToFile(game);
+  await createGame(game);
 
   return {
     gameId,
@@ -38,8 +36,8 @@ export const startDailyGame = async (): Promise<any> => {
   };
 };
 
-export const getGame = (id: string): any => {
-  const game = loadGameFromFile(id);
+export const getPedantixGame = async (id: string): Promise<any> => {
+  const game = await getGame(id);
   if (!game) return null;
 
   const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
@@ -64,7 +62,7 @@ export const getGame = (id: string): any => {
 };
 
 export const makeGuess = async (id: string, word: string): Promise<any> => {
-  const game = loadGameFromFile(id);
+  const game = await getGame(id);
   if (!game) return null;
 
   const wordLower = word.toLowerCase();
@@ -75,7 +73,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
 
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
-    saveGameToFile(game);
+    await saveGame(game);
     return {
       gameId: game.id,
       seed: game.seed,
@@ -107,7 +105,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     }
   }
 
-  saveGameToFile(game);
+  await saveGame(game);
 
   const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
     [];

@@ -1,5 +1,4 @@
 import * as gameService from "../service/game.service";
-import { listGameFiles } from "../repository/game.repository";
 
 import express from "express";
 
@@ -10,15 +9,10 @@ gameRouter.get("/start", async (req: any, res: any) => {
   res.json(gameData);
 });
 
-gameRouter.get("/:id", (req: any, res: any) => {
-  const game = gameService.getGame(req.params.id);
+gameRouter.get("/:id", async (req: any, res: any) => {
+  const game = await gameService.getPedantixGame(req.params.id);
   if (!game) return res.status(404).send("Game not found");
   res.json(game);
-});
-
-gameRouter.get("/", (req: any, res: any) => {
-  const files = listGameFiles();
-  res.json(files);
 });
 
 gameRouter.post("/guess/:id", async (req: any, res: any) => {

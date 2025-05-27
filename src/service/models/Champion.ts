@@ -1,11 +1,7 @@
-export interface LeaguePedantixModel {
+export interface Champion {
   name: string;
   image: string;
   text: string;
-}
-
-export class LeaguePedantix implements LeaguePedantixModel {
-  constructor(public name: string, public image: string, public text: string) {}
 }
 
 export const champions = [

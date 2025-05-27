@@ -1,15 +1,10 @@
-import express from "express";
 import path from "path";
-import Game from "../models/Game";
-import {
-  champions,
-  LeaguePedantix,
-  LeaguePedantixModel,
-} from "../models/LeaguePedantix";
+import Game from "../service/models/Game";
+import { LeaguePedantixModel } from "../service/models/LeaguePedantix";
 import fs from "fs";
-import puppeteer from "puppeteer";
 import { getDailySeed } from "../utils/seed";
 import cron from "node-cron";
+import { champions } from "../service/models/Champion";
 
 //export const gameRouter = express.Router();
 
@@ -67,36 +62,6 @@ cron.schedule("0 0 * * *", () => {
   console.log("Old games cleared at midnight.");
 });
 clearOldGames();
-
-export const getAllLeaguePedantix = async (): Promise<void> => {
-  for (let i = 0; i < champions.length; i++) {
-    const champion = champions[i];
-    const url = `https://universe.leagueoflegends.com/fr_FR/story/champion/${champion}/`;
-
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-
-    await page.goto(url, {
-      waitUntil: "networkidle0",
-    });
-
-    const text = await page.$$eval(".p_1_sJ", (elements) =>
-      elements.map((el) => el.textContent?.trim()).join(" \n")
-    );
-
-    const image = await page.$eval(".image_3oOd", (el) => {
-      const style = el.getAttribute("style") || "";
-      const match = style.match(/url\(['"]?(.*?)['"]?\)/);
-      return match ? match[1] : "";
-    });
-
-    console.log(champion, image);
-    saveChampionToFile(new LeaguePedantix(champion, image, text));
-
-    await browser.close();
-  }
-};
-//getAllLeaguePedantix();
 
 export const getLeaguePedantixfromSeed = async (
   seed: number

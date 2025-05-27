@@ -1,25 +1,22 @@
-import fs from "fs";
-import path from "path";
-import { GAMES_DIR } from "../routes/router";
-import Game from "../models/Game";
+import { gamesCollection } from "./db/mongo";
+import Game from "../service/models/Game";
+import { GameDBOToModel, GameModelToDBO } from "./dbo/Game.dbo";
+import { ObjectId } from "mongodb";
 
-const getGameFilePath = (id: string) => path.join(GAMES_DIR, `${id}.json`);
+export const getGame = async (id: string): Promise<Game | null> => {
+  const game = await gamesCollection.findOne({ _id: new ObjectId(id) });
+  return game ? GameDBOToModel(game) : null;
+};
 
-export const saveGameToFile = (game: Game) => {
-  fs.writeFileSync(
-    getGameFilePath(game.id),
-    JSON.stringify(game, null, 2),
-    "utf-8"
+export const createGame = async (game: Game): Promise<void> => {
+  await gamesCollection.insertOne(GameModelToDBO(game));
+};
+
+export const saveGame = async (game: Game): Promise<void> => {
+  const gameDBO = GameModelToDBO(game);
+  await gamesCollection.updateOne(
+    { _id: gameDBO._id },
+    { $set: gameDBO },
+    { upsert: true }
   );
-};
-
-export const loadGameFromFile = (id: string): Game | null => {
-  const filePath = getGameFilePath(id);
-  if (!fs.existsSync(filePath)) return null;
-  const content = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(content);
-};
-
-export const listGameFiles = (): string[] => {
-  return fs.readdirSync(GAMES_DIR);
 };

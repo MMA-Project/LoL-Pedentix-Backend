@@ -1,5 +1,5 @@
 import { LevenshteinDistance, PorterStemmerFr } from "natural";
-import { Synonyms, Verbs } from "../models/Game";
+import { Synonyms, Verbs } from "../service/models/Game";
 const Reverso = require("reverso-api");
 const reverso = new Reverso();
 
