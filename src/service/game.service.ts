@@ -1,17 +1,18 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDailySeed } from "../utils/seed";
 import { getConjugation, getMaskedText, getSynonyms } from "../utils/words";
-import Game from "./models/Game";
+import Game, { createDailyGameFromChampion } from "./models/Game";
 import {
-  createGame,
-  saveGame,
-  getGame,
+  createDailyGame,
+  saveDailyGame,
+  getDailyGame,
   getChampion,
 } from "../repository/game.repository";
 import { ObjectId } from "mongodb";
 import { champions } from "./models/Champion";
+import { LeaguePedantix } from "./models/LeaguePedantix";
 
-export const startDailyGame = async (): Promise<any> => {
+export const startDailyGame = async (): Promise<LeaguePedantix> => {
   const seed = getDailySeed();
   const seededRandom = (seed: number): number => {
     const x = Math.sin(seed) * 10000;
@@ -23,25 +24,16 @@ export const startDailyGame = async (): Promise<any> => {
   if (!champion) {
     throw new Error(`Champion ${name} not found`);
   }
-  const gameId = new ObjectId();
 
-  const game: Game = {
-    id: gameId.toString(),
-    seed: seed.toString(),
-    name: champion.name,
-    guessed: false,
-    image: champion.image,
-    mode: "daily",
-    rawText: champion.text,
-    triedWords: [],
-    verbsOfTriedWord: [],
-    synonymsOfTriedWord: [],
-  };
+  const game = createDailyGameFromChampion(seed, champion);
 
-  await createGame(game);
+  const createdId = await createDailyGame(game);
+  if (!createdId) {
+    throw new Error("Failed to create daily game");
+  }
 
   return {
-    gameId,
+    gameId: createdId,
     seed,
     guessed: game.guessed,
     text: getMaskedText(game.rawText, game.triedWords),
@@ -50,9 +42,9 @@ export const startDailyGame = async (): Promise<any> => {
   };
 };
 
-export const getPedantixGame = async (id: string): Promise<any> => {
-  const game = await getGame(id);
-  if (!game) return null;
+export const getPedantixGame = async (id: string): Promise<LeaguePedantix> => {
+  const game = await getDailyGame(id);
+  if (!game) throw new Error("Game not found");
 
   const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
     [];
@@ -66,7 +58,7 @@ export const getPedantixGame = async (id: string): Promise<any> => {
   );
 
   return {
-    gameId: game.id,
+    gameId: game.id!,
     seed: game.seed,
     guessed: game.guessed,
     text,
@@ -75,21 +67,24 @@ export const getPedantixGame = async (id: string): Promise<any> => {
   };
 };
 
-export const makeGuess = async (id: string, word: string): Promise<any> => {
-  const game = await getGame(id);
-  if (!game) return null;
+export const makeGuess = async (
+  id: string,
+  word: string
+): Promise<LeaguePedantix> => {
+  const game = await getDailyGame(id);
+  if (!game) throw new Error("Game not found");
 
   const wordLower = word.toLowerCase();
 
   if (game.guessed) {
-    return { alreadyGuessed: true };
+    throw new Error("Game already guessed");
   }
 
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
-    await saveGame(game);
+    await saveDailyGame(game);
     return {
-      gameId: game.id,
+      gameId: game.id!,
       seed: game.seed,
       guessed: game.guessed,
       text: game.rawText,
@@ -119,7 +114,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
     }
   }
 
-  await saveGame(game);
+  await saveDailyGame(game);
 
   const wordTriedWithGuessed: { wordTried: string; wordsGuessed: string[] }[] =
     [];
@@ -133,7 +128,7 @@ export const makeGuess = async (id: string, word: string): Promise<any> => {
   );
 
   return {
-    gameId: game.id,
+    gameId: game.id!,
     seed: game.seed,
     guessed: game.guessed,
     text,

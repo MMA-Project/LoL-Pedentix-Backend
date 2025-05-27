@@ -1,6 +1,8 @@
+import { Champion } from "./Champion";
+
 export default interface Game {
-  id: string;
-  seed: string;
+  id?: string;
+  seed: number;
   mode: string;
   guessed: boolean;
   image: string;
@@ -19,4 +21,21 @@ export interface Synonyms {
 export interface Verbs {
   triedWord: string;
   allFormOfVerb: string[];
+}
+
+export function createDailyGameFromChampion(
+  seed: number,
+  champion: Champion
+): Game {
+  return {
+    seed: seed,
+    name: champion.name,
+    guessed: false,
+    image: champion.image,
+    mode: "daily",
+    rawText: champion.text,
+    triedWords: [],
+    verbsOfTriedWord: [],
+    synonymsOfTriedWord: [],
+  };
 }
