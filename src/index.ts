@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { gameRouter } from "./controller/game.controller";
+import { initGameCron } from "./repository/cron/game.cron";
 
 const app = express();
 app.use(
@@ -28,3 +29,11 @@ app.use("/api/game", gameRouter);
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
+
+initGameCron()
+  .then(() => {
+    console.log("Game cron initialized successfully.");
+  })
+  .catch((error) => {
+    console.error("Error initializing game cron:", error);
+  });

@@ -1,5 +1,8 @@
 import { MongoClient } from "mongodb";
 import GameDBO from "../dbo/Game.dbo";
+import { ChampionDBO } from "../dbo/Champion.dbo";
+import { clearOldGames } from "../game.repository";
+import cron from "node-cron";
 
 const MONGO_URI = process.env.MONGO_URI;
 const MONGO_DB = process.env.MONGO_DB;
@@ -28,5 +31,5 @@ const client = new MongoClient(MONGO_URI);
 
 const db = client.db(MONGO_DB);
 
-export const championsCollection = db.collection("champions");
+export const championsCollection = db.collection<ChampionDBO>("champions");
 export const gamesCollection = db.collection<GameDBO>("games");

@@ -1,24 +1,38 @@
 import { v4 as uuidv4 } from "uuid";
 import { getDailySeed } from "../utils/seed";
-import { getLeaguePedantixfromSeed } from "../routes/router";
 import { getConjugation, getMaskedText, getSynonyms } from "../utils/words";
 import Game from "./models/Game";
-import { createGame, saveGame, getGame } from "../repository/game.repository";
+import {
+  createGame,
+  saveGame,
+  getGame,
+  getChampion,
+} from "../repository/game.repository";
 import { ObjectId } from "mongodb";
+import { champions } from "./models/Champion";
 
 export const startDailyGame = async (): Promise<any> => {
   const seed = getDailySeed();
-  const chosen = await getLeaguePedantixfromSeed(seed);
+  const seededRandom = (seed: number): number => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  };
+
+  const name = champions[Math.floor(seededRandom(seed) * champions.length)];
+  const champion = await getChampion(name);
+  if (!champion) {
+    throw new Error(`Champion ${name} not found`);
+  }
   const gameId = new ObjectId();
 
   const game: Game = {
     id: gameId.toString(),
     seed: seed.toString(),
-    name: chosen.name,
+    name: champion.name,
     guessed: false,
-    image: chosen.image,
+    image: champion.image,
     mode: "daily",
-    rawText: chosen.text,
+    rawText: champion.text,
     triedWords: [],
     verbsOfTriedWord: [],
     synonymsOfTriedWord: [],
