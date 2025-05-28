@@ -65,10 +65,7 @@ export const makeGuess = async (
 
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
-    const updatedGame = await saveDailyGame(game);
-    if (!updatedGame) {
-      throw new NotModifiedError("Game not modified");
-    }
+    await saveDailyGame(game);
     return gameToLeaguePedantix(game);
   }
 
@@ -91,10 +88,7 @@ export const makeGuess = async (
     }
   }
 
-  const updatedGame = await saveDailyGame(game);
-  if (!updatedGame) {
-    throw new NotModifiedError("Game not modified");
-  }
+  await saveDailyGame(game);
 
   return gameToLeaguePedantix(game);
 };
