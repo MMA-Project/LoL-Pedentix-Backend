@@ -19,13 +19,14 @@ export const createDailyGame = async (game: Game): Promise<string | null> => {
   return inserted.insertedId.toString() || null;
 };
 
-export const saveDailyGame = async (game: Game): Promise<void> => {
+export const saveDailyGame = async (game: Game): Promise<number> => {
   const gameDBO = GameModelToDBO(game);
-  await dailyGamesCollection.updateOne(
+  const updatedGame = await dailyGamesCollection.updateOne(
     { _id: gameDBO._id },
     { $set: gameDBO },
     { upsert: true }
   );
+  return updatedGame.modifiedCount;
 };
 
 export const getChampion = async (name: string): Promise<Champion | null> => {
@@ -33,9 +34,10 @@ export const getChampion = async (name: string): Promise<Champion | null> => {
   return championDBO ? ChampionDBOToModel(championDBO) : null;
 };
 
-export const clearOldDailyGames = async (): Promise<void> => {
+export const clearOldDailyGames = async (): Promise<number> => {
   const todaySeed = getDailySeed();
-  await dailyGamesCollection.deleteMany({
+  const deletedGames = await dailyGamesCollection.deleteMany({
     seed: { $ne: todaySeed },
   });
+  return deletedGames.deletedCount;
 };
