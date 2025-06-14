@@ -1,8 +1,8 @@
-import { WithId } from "mongodb";
+import { ObjectId, WithId } from "mongodb";
 import { Champion } from "../../service/models/Champion";
 
 export interface ChampionDBO {
-  _id: string;
+  _id: ObjectId;
   name: string;
   image: string;
   text: string;

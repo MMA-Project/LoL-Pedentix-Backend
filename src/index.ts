@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { gameRouter } from "./controller/game.controller";
-import { initGameCron } from "./repository/cron/game.cron";
+import { initGameCron } from "./service/cron/game.cron";
 import { errorHandler } from "./middleware";
 
 const app = express();
