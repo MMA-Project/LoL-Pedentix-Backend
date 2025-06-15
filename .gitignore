@@ -2,3 +2,4 @@
 package-lock.json
 /src/data/games
 .cache/
+.vscode/

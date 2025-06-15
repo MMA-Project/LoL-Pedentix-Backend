@@ -10,6 +10,7 @@ import {
 } from "../../repository/game.repository";
 import cron from "node-cron";
 import { add } from "cheerio/dist/commonjs/api/traversing";
+import { randomInt } from "crypto";
 
 export async function initGameCron() {
   cron.schedule("0 0 * * *", async () => {
@@ -25,7 +26,8 @@ export async function gameCron() {
   console.log(`Today's seed is: ${todaySeed}`);
 
   const champions = await getAllChampions();
-  const champion = champions[todaySeed % champions.length];
+  const champion =
+    champions[(todaySeed * randomInt(0, champions.length)) % champions.length];
   await addNewRecordToDailyHistory({
     seed: todaySeed,
     name: champion.name,

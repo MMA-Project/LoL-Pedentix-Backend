@@ -47,6 +47,16 @@ export const createHistoryRecord = async (
   return result.insertedId.toString() || null;
 };
 
+export const incFindedCountToHistoryRecord = async (
+  seed: number
+): Promise<number> => {
+  const updated = await dailyHistoryCollection.updateOne(
+    { seed },
+    { $inc: { findedCount: 1 } }
+  );
+  return updated.modifiedCount;
+};
+
 export const createDailyGame = async (game: Game): Promise<string | null> => {
   const gameDBO = GameModelToDBO(game);
   gameDBO._id = new ObjectId();
