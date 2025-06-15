@@ -3,7 +3,10 @@ import cors from "cors";
 import { gameRouter } from "./controller/game.controller";
 import { initGameCron } from "./service/cron/game.cron";
 import { errorHandler } from "./middleware";
+import { Server } from "socket.io";
+import http from "http";
 
+const PORT = 3001;
 const app = express();
 app.use(
   cors({
@@ -12,7 +15,20 @@ app.use(
 );
 app.use(express.json());
 
-const PORT = 3001;
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: ["https://mma-project.github.io", "http://localhost:5173"],
+    methods: ["GET", "POST"],
+  },
+});
+io.on("connection", (socket) => {
+  console.log("user connected");
+  socket.on("disconnect", function () {
+    console.log("user disconnected");
+  });
+});
 
 // Middleware for tracing requests
 app.use((req, res, next) => {
@@ -27,10 +43,7 @@ app.get("/", (req, res) => {
 // Game routes
 app.use("/api/game", gameRouter);
 
-// Error handling middleware
-app.use(errorHandler);
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
 
