@@ -1,30 +1,28 @@
 import { getDailySeed } from "../utils/seed";
-import { getConjugation, getMaskedText, getSynonyms } from "../utils/words";
+import { getConjugation, getSynonyms } from "../utils/words";
 import { createDailyGameFromChampion } from "./models/Game";
-import {
-  createDailyGame,
-  saveDailyGame,
-  getDailyGame,
-  getChampion,
-} from "../repository/game.repository";
+import * as gameRepository from "../repository/game.repository";
 import { ObjectId } from "mongodb";
-import { champions } from "./models/Champion";
 import { gameToLeaguePedantix, LeaguePedantix } from "./models/LeaguePedantix";
 import NotFoundError from "../errors/NotFound.error";
 import NotModifiedError from "../errors/NotModified.error";
 import BadRequestError from "../errors/BadRequest.error";
+import HistoryRecord from "./models/History";
 
 export const startDailyGame = async (): Promise<LeaguePedantix> => {
   const seed = getDailySeed();
-  const name = champions[seed % champions.length];
-  const champion = await getChampion(name);
+  const dailyRecord = await gameRepository.getHistoryBySeed(seed);
+  if (!dailyRecord) {
+    throw new NotFoundError(`Daily record for seed ${seed} not found`);
+  }
+  const champion = await gameRepository.getChampion(dailyRecord.name);
   if (!champion) {
-    throw new NotFoundError(`Champion ${name} not found`);
+    throw new NotFoundError(`Champion ${dailyRecord.name} not found`);
   }
 
   const game = createDailyGameFromChampion(seed, champion);
 
-  const createdId = await createDailyGame(game);
+  const createdId = await gameRepository.createDailyGame(game);
   if (!createdId) {
     throw new Error("Failed to create daily game");
   }
@@ -39,10 +37,16 @@ export const getPedantixGame = async (id: string): Promise<LeaguePedantix> => {
       "Invalid id : Must be a 12-byte hexadecimal string"
     );
   }
-  const game = await getDailyGame(id);
+  const game = await gameRepository.getDailyGame(id);
   if (!game) throw new NotFoundError("Game not found");
 
   return gameToLeaguePedantix(game);
+};
+
+export const getHistory = async (): Promise<HistoryRecord[]> => {
+  const history = await gameRepository.getHistory();
+  history[0].name = "";
+  return history;
 };
 
 export const makeGuess = async (
@@ -54,7 +58,7 @@ export const makeGuess = async (
       "Invalid id : Must be a 12-byte hexadecimal string"
     );
   }
-  const game = await getDailyGame(id);
+  const game = await gameRepository.getDailyGame(id);
   if (!game) throw new NotFoundError("Game not found");
 
   const wordLower = word.toLowerCase();
@@ -65,7 +69,8 @@ export const makeGuess = async (
 
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
-    await saveDailyGame(game);
+    await gameRepository.saveDailyGame(game);
+    await gameRepository.incFindedCountToHistoryRecord(game.seed);
     return gameToLeaguePedantix(game);
   }
 
@@ -88,7 +93,7 @@ export const makeGuess = async (
     }
   }
 
-  await saveDailyGame(game);
+  await gameRepository.saveDailyGame(game);
 
   return gameToLeaguePedantix(game);
 };

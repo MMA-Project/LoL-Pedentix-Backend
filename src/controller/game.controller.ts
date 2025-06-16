@@ -9,6 +9,11 @@ gameRouter.get("/start", async (req: any, res: any) => {
   res.json(gameData);
 });
 
+gameRouter.get("/history", async (req: any, res: any) => {
+  const history = await gameService.getHistory();
+  res.json(history);
+});
+
 gameRouter.get("/:id", async (req: any, res: any) => {
   const game = await gameService.getPedantixGame(req.params.id);
   res.json(game);
