@@ -5,6 +5,9 @@ import { initGameCron } from "./service/cron/game.cron";
 import { errorHandler } from "./middleware";
 import { Server } from "socket.io";
 import http from "http";
+import { v4 as uuid } from "uuid";
+import Game from "./service/models/Game";
+import { LeaguePedantix } from "./service/models/LeaguePedantix";
 
 const PORT = 3001;
 const app = express();
@@ -23,11 +26,61 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
+function broadcastRoomSize(roomId: string) {
+  const size = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+  io.to(roomId).emit("room-update", { size });
+}
 io.on("connection", (socket) => {
-  console.log("user connected");
-  socket.on("disconnect", function () {
-    console.log("user disconnected");
+  // Création d'une room
+  socket.on("create-room", ({ gameId }, callback) => {
+    const roomId = uuid()
+      .replace(/-/g, "")
+      .slice(0, 20)
+      .replace(/[0-9]/g, () =>
+        String.fromCharCode(65 + Math.floor(Math.random() * 26))
+      );
+    socket.join(roomId);
+    socket.data.roomId = roomId;
+    socket.data.gameId = gameId;
+
+    console.log(`Room ${roomId} created by ${socket.id} for game ${gameId}`);
+    callback({ roomId });
   });
+
+  // Rejoindre une room existante
+  socket.on("join-room", ({ roomId, gameId }, callback) => {
+    const rooms = io.sockets.adapter.rooms;
+    if (!rooms.has(roomId)) {
+      return callback({ roomId: null, error: "Room does not exist" });
+    }
+    socket.join(roomId);
+    socket.data.roomId = roomId;
+    socket.data.gameId = gameId;
+
+    console.log(`User ${socket.id} joined room ${roomId} with game ${gameId}`);
+    broadcastRoomSize(roomId);
+    callback({ roomId });
+  });
+
+  socket.on("new-guess", (game: LeaguePedantix) => {
+    const roomId = socket.data.roomId;
+    if (roomId) {
+      console.log(`New guess in room ${roomId} for game ${game.gameId}`);
+      io.to(roomId).emit("new-guess", { game });
+    }
+  });
+  socket.on("disconnecting", () => {
+    const roomId = socket.data.roomId;
+    if (roomId) {
+      // Delay the broadcast slightly to ensure socket leaves the room before we count
+      setTimeout(() => {
+        broadcastRoomSize(roomId);
+      }, 100); // petite marge
+    }
+  });
+});
+io.on("error", (error) => {
+  console.error("Socket.IO error:", error);
 });
 
 // Middleware for tracing requests
