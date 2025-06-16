@@ -1,6 +1,6 @@
 import { getDailySeed } from "../utils/seed";
 import { getConjugation, getSynonyms } from "../utils/words";
-import { createDailyGameFromChampion } from "./models/Game";
+import Game, { createDailyGameFromChampion } from "./models/Game";
 import * as gameRepository from "../repository/game.repository";
 import { ObjectId } from "mongodb";
 import { gameToLeaguePedantix, LeaguePedantix } from "./models/LeaguePedantix";
@@ -96,4 +96,77 @@ export const makeGuess = async (
   await gameRepository.saveDailyGame(game);
 
   return gameToLeaguePedantix(game);
+};
+
+export const syncGame = async (
+  existingGameId: string,
+  incomingGameId: string
+): Promise<LeaguePedantix> => {
+  if (!ObjectId.isValid(existingGameId) || !ObjectId.isValid(incomingGameId)) {
+    throw new BadRequestError(
+      "Invalid id : Must be a 12-byte hexadecimal string"
+    );
+  }
+  const existingGame = await gameRepository.getDailyGame(existingGameId);
+  if (!existingGame) throw new NotFoundError("Game not found");
+  const game = await gameRepository.getDailyGame(incomingGameId);
+  if (!game) throw new NotFoundError("Incoming game not found");
+
+  if (existingGame.guessed) {
+    throw new NotModifiedError("Game already guessed");
+  }
+  if (existingGame.seed !== game.seed) {
+    throw new BadRequestError("Seed mismatch");
+  }
+
+  if (game.guessed) {
+    existingGame.guessed = true;
+    await gameRepository.incFindedCountToHistoryRecord(existingGame.seed);
+  }
+
+  // Merge triedWords
+  existingGame.triedWords = Array.from(
+    new Set([...existingGame.triedWords, ...game.triedWords])
+  );
+
+  // Merge synonymsOfTriedWord
+  const synonyms = new Map(
+    [...existingGame.synonymsOfTriedWord, ...game.synonymsOfTriedWord].map(
+      (e) => [e.triedWord, e.synonyms]
+    )
+  );
+  for (const e of game.synonymsOfTriedWord) {
+    synonyms.set(
+      e.triedWord,
+      Array.from(new Set([...(synonyms.get(e.triedWord) || []), ...e.synonyms]))
+    );
+  }
+  existingGame.synonymsOfTriedWord = Array.from(
+    synonyms,
+    ([triedWord, synonyms]) => ({ triedWord, synonyms })
+  );
+
+  // Merge verbsOfTriedWord
+  const verbs = new Map(
+    [...existingGame.verbsOfTriedWord, ...game.verbsOfTriedWord].map((e) => [
+      e.triedWord,
+      e.allFormOfVerb,
+    ])
+  );
+  for (const e of game.verbsOfTriedWord) {
+    verbs.set(
+      e.triedWord,
+      Array.from(
+        new Set([...(verbs.get(e.triedWord) || []), ...e.allFormOfVerb])
+      )
+    );
+  }
+  existingGame.verbsOfTriedWord = Array.from(
+    verbs,
+    ([triedWord, allFormOfVerb]) => ({ triedWord, allFormOfVerb })
+  );
+
+  await gameRepository.saveDailyGame(existingGame);
+
+  return gameToLeaguePedantix(existingGame);
 };

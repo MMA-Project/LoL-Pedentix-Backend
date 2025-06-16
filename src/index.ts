@@ -8,6 +8,7 @@ import http from "http";
 import { v4 as uuid } from "uuid";
 import Game from "./service/models/Game";
 import { LeaguePedantix } from "./service/models/LeaguePedantix";
+import { getPedantixGame, syncGame } from "./service/game.service";
 
 const PORT = 3001;
 const app = express();
@@ -48,7 +49,7 @@ io.on("connection", (socket) => {
   });
 
   // Rejoindre une room existante
-  socket.on("join-room", ({ roomId, gameId }, callback) => {
+  socket.on("join-room", async ({ roomId, gameId }, callback) => {
     const rooms = io.sockets.adapter.rooms;
     if (!rooms.has(roomId)) {
       return callback({ roomId: null, error: "Room does not exist" });
@@ -57,17 +58,65 @@ io.on("connection", (socket) => {
     socket.data.roomId = roomId;
     socket.data.gameId = gameId;
 
-    console.log(`User ${socket.id} joined room ${roomId} with game ${gameId}`);
+    console.log(`Room ${roomId} joined by ${socket.id} with game ${gameId}`);
     broadcastRoomSize(roomId);
+    const socketsInRoom = await io.in(roomId).fetchSockets();
+    const gameIds = Array.from(
+      new Set(socketsInRoom.map((s) => s.data.gameId).filter(Boolean))
+    );
+    console.log(
+      `Synchronizing games in room ${roomId} for gameIds: ${gameIds.join(", ")}`
+    );
+    socketsInRoom.forEach(async (s) => {
+      console.log(
+        `Broadcasting Sync to game ${s.data.gameId} in room ${roomId}`
+      );
+      try {
+        // Synchronize the game state for the other sockets
+        await Promise.all(
+          gameIds.map(async (id) => {
+            if (s.data.gameId === id) return;
+            console.log(
+              `Synchronizing game ${id} for socket ${s.id} in room ${roomId}`
+            );
+            return await syncGame(s.data.gameId, id);
+          })
+        );
+        const game = await getPedantixGame(s.data.gameId);
+        s.emit("new-guess", { game });
+      } catch (error) {
+        console.error("Error synchronizing game:", error);
+      }
+    });
     callback({ roomId });
   });
 
-  socket.on("new-guess", (game: LeaguePedantix) => {
+  socket.on("new-guess", () => {
     const roomId = socket.data.roomId;
-    if (roomId) {
-      console.log(`New guess in room ${roomId} for game ${game.gameId}`);
-      io.to(roomId).emit("new-guess", { game });
-    }
+    if (!roomId) return;
+
+    const gameId = socket.data.gameId;
+    console.log(`New guess in room ${roomId} for game ${gameId}`);
+
+    // Broadcast to all other sockets in the same room, including different gameIds
+    io.in(roomId)
+      .fetchSockets()
+      .then((sockets) => {
+        sockets.forEach(async (s) => {
+          if (s.id !== socket.id && s.data.gameId !== gameId) {
+            console.log(
+              `Broadcasting new guess to game ${s.data.gameId} in room ${roomId}`
+            );
+            try {
+              // Synchronize the game state for the other sockets
+              const game = await syncGame(s.data.gameId, gameId);
+              s.emit("new-guess", { game });
+            } catch (error) {
+              console.error("Error synchronizing game:", error);
+            }
+          }
+        });
+      });
   });
   socket.on("disconnecting", () => {
     const roomId = socket.data.roomId;
