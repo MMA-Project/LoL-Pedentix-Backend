@@ -34,8 +34,6 @@ export function getMaskedText(
 
     const wordStem = PorterStemmerFr.stem(lower);
 
-    if (lower === "dieux") console.log(lower, wordStem, stemsToTried);
-
     const updateWordGuessedList = (word: string) => {
       const triedWord =
         stemsToTried.get(PorterStemmerFr.stem(word)) ??
