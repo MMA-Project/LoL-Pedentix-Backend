@@ -1,6 +1,5 @@
 .env
 /node_modules
-package-lock.json
 /src/data/games
 .cache/
 .vscode/
