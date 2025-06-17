@@ -53,7 +53,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"word\": \"avoir\"\n}",
+					"raw": "{\n    \"word\": \"est\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -80,7 +80,19 @@
 			"name": "Daily History",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "localhost:3001/api/game/history",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"game",
+						"history"
+					]
+				}
 			},
 			"response": []
 		},
@@ -88,7 +100,19 @@
 			"name": "All Champions",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [],
+				"url": {
+					"raw": "localhost:3001/api/game/champions",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"api",
+						"game",
+						"champions"
+					]
+				}
 			},
 			"response": []
 		}
