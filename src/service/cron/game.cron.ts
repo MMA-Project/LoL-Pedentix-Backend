@@ -1,15 +1,11 @@
-import BadRequestError from "../../errors/BadRequest.error";
-import NotFoundError from "../../errors/NotFound.error";
 import HistoryRecord from "../models/History";
 import { getDailySeed } from "../../utils/seed";
 import {
   clearOldDailyGames,
   createHistoryRecord,
   getAllChampions,
-  getChampion,
 } from "../../repository/game.repository";
 import cron from "node-cron";
-import { add } from "cheerio/dist/commonjs/api/traversing";
 import { randomInt } from "crypto";
 
 export async function initGameCron() {

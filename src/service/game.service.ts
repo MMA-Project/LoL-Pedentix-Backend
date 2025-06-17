@@ -1,6 +1,6 @@
 import { getDailySeed } from "../utils/seed";
 import { getConjugation, getSynonyms } from "../utils/words";
-import Game, { createDailyGameFromChampion } from "./models/Game";
+import { createDailyGameFromChampion } from "./models/Game";
 import * as gameRepository from "../repository/game.repository";
 import { ObjectId } from "mongodb";
 import { gameToLeaguePedantix, LeaguePedantix } from "./models/LeaguePedantix";
@@ -8,6 +8,7 @@ import NotFoundError from "../errors/NotFound.error";
 import NotModifiedError from "../errors/NotModified.error";
 import BadRequestError from "../errors/BadRequest.error";
 import HistoryRecord from "./models/History";
+import { Champion } from "./models/Champion";
 
 export const startDailyGame = async (): Promise<LeaguePedantix> => {
   const seed = getDailySeed();
@@ -47,6 +48,11 @@ export const getHistory = async (): Promise<HistoryRecord[]> => {
   const history = await gameRepository.getHistory();
   history[0].name = "";
   return history;
+};
+
+export const getAllChampionsNames = async (): Promise<string[]> => {
+  const champions = await gameRepository.getAllChampions();
+  return champions.map((champion) => champion.name);
 };
 
 export const makeGuess = async (
