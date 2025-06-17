@@ -1,0 +1,26 @@
+name: Audit and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  audit-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
