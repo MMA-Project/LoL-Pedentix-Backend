@@ -4,7 +4,9 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "dev": "ts-node-dev src/index.ts"
+        "dev": "ts-node-dev src/index.ts",
+        "prepare": "husky",
+        "lint": "eslint . --ext .ts"
     },
     "keywords": [],
     "author": "",
@@ -30,6 +32,10 @@
         "@types/jest": "^30.0.0",
         "@types/node": "^22.14.1",
         "@types/node-cron": "^3.0.11",
+        "@typescript-eslint/eslint-plugin": "^8.34.1",
+        "@typescript-eslint/parser": "^8.34.1",
+        "eslint": "^9.29.0",
+        "husky": "^9.1.7",
         "jest": "^30.0.0",
         "natural": "^8.0.1",
         "ts-jest": "^29.4.0",
