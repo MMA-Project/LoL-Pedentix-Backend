@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { v4 as uuid } from "uuid";
 import { getPedantixGame, syncGame } from "./service/game.service";
+import { getLockKey, runWithLock } from "./utils/lock";
 
 export function setupSocket(io: Server) {
   function broadcastRoomSize(roomId: string) {
@@ -50,7 +51,6 @@ export function setupSocket(io: Server) {
           `Broadcasting Sync to game ${s.data.gameId} in room ${roomId}`
         );
         try {
-          // Synchronize the game state for the other sockets
           await Promise.all(
             gameIds.map(async (id) => {
               if (s.data.gameId === id) return;
@@ -76,22 +76,25 @@ export function setupSocket(io: Server) {
       const gameId = socket.data.gameId;
       console.log(`New guess in room ${roomId} for game ${gameId}`);
 
-      // Broadcast to all other sockets in the same room, including different gameIds
       io.in(roomId)
         .fetchSockets()
         .then((sockets) => {
           sockets.forEach(async (s) => {
+            const toGameId = s.data.gameId;
             if (s.id !== socket.id && s.data.gameId !== gameId) {
+              const key = getLockKey(gameId, toGameId);
               console.log(
-                `Broadcasting new guess to game ${s.data.gameId} in room ${roomId}`
+                `Broadcasting new guess to game ${toGameId} in room ${roomId}`
               );
-              try {
-                // Synchronize the game state for the other sockets
-                const game = await syncGame(s.data.gameId, gameId);
-                s.emit("new-guess", { game });
-              } catch (error) {
-                console.error("Error synchronizing game:", error);
-              }
+
+              await runWithLock(key, async () => {
+                try {
+                  const game = await syncGame(toGameId, gameId);
+                  s.emit("new-guess", { game });
+                } catch (err) {
+                  console.error("Error during sync:", err);
+                }
+              });
             }
           });
         });
