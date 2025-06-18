@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "ts-node-dev src/index.ts",
         "prepare": "husky",
-        "lint": "eslint . --ext .ts"
+        "lint": "eslint . --ext .ts",
+        "test": "jest"
     },
     "keywords": [],
     "author": "",

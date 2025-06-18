@@ -74,6 +74,7 @@ export const makeGuess = async (
 
   if (game.name.toLowerCase() === wordLower) {
     game.guessed = true;
+    game.triedWords.push(wordLower);
     await gameRepository.saveDailyGame(game);
     await gameRepository.incFindedCountToHistoryRecord(game.seed);
     return gameToLeaguePedantix(game);
