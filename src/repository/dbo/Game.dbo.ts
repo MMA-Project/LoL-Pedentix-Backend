@@ -1,4 +1,7 @@
-import Game, { Synonyms, Verbs } from "../../service/models/Game";
+import Game, {
+  SynonymsOfTriedWord,
+  VerbsOfTriedWord,
+} from "../../service/models/Game";
 import { ObjectId, WithId } from "mongodb";
 
 export default interface GameDBO {
@@ -10,8 +13,8 @@ export default interface GameDBO {
   name: string;
   rawText: string;
   triedWords: string[];
-  synonymsOfTriedWord: Synonyms[];
-  verbsOfTriedWord: Verbs[];
+  synonymsOfTriedWord: SynonymsOfTriedWord[];
+  verbsOfTriedWord: VerbsOfTriedWord[];
 }
 
 export const GameDBOToModel: (game: WithId<GameDBO>) => Game = (game) => {
