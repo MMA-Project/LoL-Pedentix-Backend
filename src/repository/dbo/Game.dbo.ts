@@ -1,3 +1,4 @@
+/* eslint-disable @/no-unused-vars */
 import Game, { Synonyms, Verbs } from "../../service/models/Game";
 import { ObjectId, WithId } from "mongodb";
 

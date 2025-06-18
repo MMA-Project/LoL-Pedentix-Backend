@@ -36,4 +36,6 @@ export const errorHandler = (
       err instanceof Error ? err.stack : err
     }`
   );
+
+  next();
 };

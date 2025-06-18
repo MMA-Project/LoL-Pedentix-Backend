@@ -8,7 +8,6 @@ import NotFoundError from "../errors/NotFound.error";
 import NotModifiedError from "../errors/NotModified.error";
 import BadRequestError from "../errors/BadRequest.error";
 import HistoryRecord from "./models/History";
-import { Champion } from "./models/Champion";
 
 export const startDailyGame = async (): Promise<LeaguePedantix> => {
   const seed = getDailySeed();

@@ -2,12 +2,9 @@ import express from "express";
 import cors from "cors";
 import { gameRouter } from "./controller/game.controller";
 import { initGameCron } from "./service/cron/game.cron";
-import { errorHandler } from "./middleware";
 import { Server } from "socket.io";
 import http from "http";
 import { v4 as uuid } from "uuid";
-import Game from "./service/models/Game";
-import { LeaguePedantix } from "./service/models/LeaguePedantix";
 import { getPedantixGame, syncGame } from "./service/game.service";
 
 const PORT = 3001;
