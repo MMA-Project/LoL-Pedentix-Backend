@@ -1,13 +1,15 @@
 # League of Legends Pédantix – Backend
 
-Backend du jeu Pédantix version League of Legends. Le but : deviner le champion du jour à partir de sa page Wikipédia.
+Backend du jeu Pédantix version League of Legends. Le but : deviner le champion du jour à partir de sa page [Universe](https://universe.leagueoflegends.com/fr_FR/).
 
 
-NAUD Mattis
-SIMON Melvin
-CLENET Alexandre
+NAUD Mattis   
+SIMON Melvin   
+CLENET Alexandre  
+[Git Tasks](https://github.com/orgs/MMA-Project/projects/1/views/1)
 
 ---
+
 
 ## Sommaire
 
@@ -40,12 +42,24 @@ npm install
 ```
 Créer un fichier `.env` à la racine du projet avec les variables d'environnement nécessaires. Un exemple est fourni dans `.env.example`.
 
+Installer Postman pour tester les routes : https://www.postman.com/downloads/   
+Pour POSTMAN une collection est disponible à la racine de projet
+
+Pour lancer Mongo en local [TUTO](https://www.mongodb.com/try/download/community)  
+[MongoDB Compass](https://www.mongodb.com/fr-fr/products/tools/compass) (pour avoir un GUI si besoin pour créer les tables)
+
+Créer une base de donnée `pedantix` avec une collection `champions` et importer les données depuis `.src/data/champions/champions.json`, les autres collections seront créées avec le lancement du back.
+
 ## Lancement du projet
 
 En mode développement :
-
 ```bash
 npm run dev
+```
+
+Pour les tests :
+```bash
+npm test
 ```
 
 ## Structure du projet
