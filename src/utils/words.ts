@@ -1,5 +1,5 @@
 import { LevenshteinDistance, PorterStemmerFr } from "natural";
-import { Synonyms, Verbs } from "../service/models/Game";
+import { SynonymsOfTriedWord, VerbsOfTriedWord } from "../service/models/Game";
 const Reverso = require("reverso-api");
 const reverso = new Reverso();
 
@@ -7,8 +7,8 @@ export function getMaskedText(
   text: string,
   triedWords: string[],
   wordTriedWithGuessed?: { wordTried: string; wordsGuessed: string[] }[],
-  synonymsOfTriedWord?: Synonyms[],
-  verbsOfTriedWord?: Verbs[]
+  synonymsOfTriedWord?: SynonymsOfTriedWord[],
+  verbsOfTriedWord?: VerbsOfTriedWord[]
 ): string {
   const lowerTried = triedWords.map((w) => w.toLowerCase());
   const foundSet = new Set(lowerTried);

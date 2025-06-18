@@ -3,3 +3,4 @@
 /src/data/games
 .cache/
 .vscode/
+coverage/

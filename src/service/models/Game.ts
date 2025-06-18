@@ -9,16 +9,16 @@ export default interface Game {
   name: string;
   rawText: string;
   triedWords: string[];
-  synonymsOfTriedWord: Synonyms[];
-  verbsOfTriedWord: Verbs[];
+  synonymsOfTriedWord: SynonymsOfTriedWord[];
+  verbsOfTriedWord: VerbsOfTriedWord[];
 }
 
-export interface Synonyms {
+export interface SynonymsOfTriedWord {
   triedWord: string;
   synonyms: string[];
 }
 
-export interface Verbs {
+export interface VerbsOfTriedWord {
   triedWord: string;
   allFormOfVerb: string[];
 }

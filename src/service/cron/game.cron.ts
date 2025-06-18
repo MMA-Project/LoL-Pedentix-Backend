@@ -8,14 +8,14 @@ import {
 import cron from "node-cron";
 import { randomInt } from "crypto";
 
-export async function initGameCron() {
+export async function initDailyGameCron() {
   cron.schedule("0 0 * * *", async () => {
-    await gameCron();
+    await dailyGameCron();
   });
-  await gameCron();
+  await dailyGameCron();
 }
 
-export async function gameCron() {
+export async function dailyGameCron() {
   await clearOldDailyGames();
   console.log("Old daily games cleared at midnight.");
   const todaySeed = getDailySeed();
